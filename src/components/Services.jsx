@@ -1,30 +1,55 @@
+import { useState } from "react";
 import { serviceCategories, formatNaira } from "../data/services";
 
 export default function Services() {
+  const [openKey, setOpenKey] = useState(null);
+
   return (
     <section id="services" className="bg-ink py-24 px-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <p className="text-gold tracking-[0.2em] uppercase text-xs mb-4 text-center">Services & Pricing</p>
-        <h2 className="font-display text-4xl md:text-5xl mb-16 text-center">Crafted for you</h2>
+        <h2 className="font-display text-4xl md:text-5xl mb-16 text-center">Piercing Price List</h2>
 
         {serviceCategories.map((category) => (
-          <div key={category.id} className="mb-16 last:mb-0">
-            <div className="mb-8">
-              <h3 className="font-display text-3xl text-gold mb-2">{category.label}</h3>
-              <p className="text-ivory/60">{category.tagline}</p>
-            </div>
+          <div key={category.id} className="mb-14 last:mb-0">
+            <h3 className="font-display text-3xl text-gold mb-6">{category.label}</h3>
+            <div className="border-t border-gold/20">
+              {category.items.map((item) => {
+                const key = category.id + "-" + item.name;
+                const isOpen = openKey === key;
+                return (
+                  <div key={key} className="border-b border-gold/20">
+                    <button
+                      onClick={() => setOpenKey(isOpen ? null : key)}
+                      className="w-full flex items-center justify-between py-4 text-left hover:text-gold transition-colors"
+                    >
+                      <span className="text-lg">{item.name}</span>
+                      <span className="flex items-center gap-4">
+                        <span className="text-gold">{formatNaira(item.price)}</span>
+                        <span className="text-gold text-xl">{isOpen ? "−" : "+"}</span>
+                      </span>
+                    </button>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {category.items.map((item) => (
-                <div key={item.id} className="border border-gold/20 p-6 hover:border-gold/50 transition-colors">
-                  <h4 className="font-display text-xl mb-2">{item.name}</h4>
-                  <p className="text-ivory/60 text-sm mb-4">{item.description}</p>
-                  <div className="flex items-center justify-between pt-4 border-t border-gold/10">
-                    <span className="text-gold font-medium">{formatNaira(item.price)}</span>
-                    <span className="text-ivory/40 text-xs">{item.duration}</span>
+                    {isOpen && (
+                      <div className="pb-6 grid sm:grid-cols-2 gap-6">
+                        <div className="aspect-square bg-ink-light border border-gold/20 overflow-hidden flex items-center justify-center">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-ivory/30 text-sm">Photo coming soon</span>
+                          )}
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <h4 className="font-display text-2xl mb-2">{item.name}</h4>
+                          <p className="text-ivory/60 mb-4">{item.description || category.description}</p>
+                          <p className="text-gold mb-6">{formatNaira(item.price)}</p>
+                          <a href="#booking" className="bg-gold text-ink px-6 py-3 text-sm tracking-wide font-medium text-center hover:bg-gold-soft transition-colors">Book This Piercing</a>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))}
