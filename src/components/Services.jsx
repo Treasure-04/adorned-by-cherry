@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { serviceCategories, formatNaira } from "../data/services";
+import PiercingReviews from "./PiercingReviews";
 
 export default function Services() {
   const [openKey, setOpenKey] = useState(null);
@@ -31,20 +32,23 @@ export default function Services() {
                     </button>
 
                     {isOpen && (
-                      <div className="pb-6 grid sm:grid-cols-2 gap-6">
-                        <div className="aspect-square bg-ink-light border border-gold/20 overflow-hidden flex items-center justify-center">
-                          {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-ivory/30 text-sm">Photo coming soon</span>
-                          )}
+                      <div className="pb-8">
+                        <div className="grid sm:grid-cols-2 gap-6">
+                          <div className="aspect-square bg-ink-light border border-gold/20 overflow-hidden flex items-center justify-center">
+                            {item.image ? (
+                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-ivory/30 text-sm">Photo coming soon</span>
+                            )}
+                          </div>
+                          <div className="flex flex-col justify-center">
+                            <h4 className="font-display text-2xl mb-2">{item.name}</h4>
+                            <p className="text-ivory/60 mb-4">{item.description || category.description}</p>
+                            <p className="text-gold mb-6">{formatNaira(item.price)}</p>
+                            <a href="#booking" className="bg-gold text-ink px-6 py-3 text-sm tracking-wide font-medium text-center hover:bg-gold-soft transition-colors">Book This Piercing</a>
+                          </div>
                         </div>
-                        <div className="flex flex-col justify-center">
-                          <h4 className="font-display text-2xl mb-2">{item.name}</h4>
-                          <p className="text-ivory/60 mb-4">{item.description || category.description}</p>
-                          <p className="text-gold mb-6">{formatNaira(item.price)}</p>
-                          <a href="#booking" className="bg-gold text-ink px-6 py-3 text-sm tracking-wide font-medium text-center hover:bg-gold-soft transition-colors">Book This Piercing</a>
-                        </div>
+                        <PiercingReviews piercing={key} />
                       </div>
                     )}
                   </div>
