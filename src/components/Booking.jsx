@@ -2,8 +2,9 @@ import { useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 import { serviceCategories, formatNaira } from "../data/services";
+import { sendBookingReceived } from "../emailjs";
 
-const times = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"];
+const times = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00pm"];
 
 const emptyForm = { name: "", phone: "", email: "", piercing: "", date: "", time: "", notes: "" };
 
@@ -19,24 +20,29 @@ export default function Booking() {
   async function submit(e) {
     e.preventDefault();
     setStatus("sending");
+    const booking = {
+      name: form.name.trim(),
+      phone: form.phone.trim(),
+      email: form.email.trim(),
+      piercing: form.piercing,
+      date: form.date,
+      time: form.time,
+      notes: form.notes.trim(),
+    };
     try {
-      await addDoc(collection(db, "bookings"), {
-        name: form.name.trim(),
-        phone: form.phone.trim(),
-        email: form.email.trim(),
-        piercing: form.piercing,
-        date: form.date,
-        time: form.time,
-        notes: form.notes.trim(),
-        status: "pending",
-        createdAt: serverTimestamp(),
-      });
-      setForm(emptyForm);
-      setStatus("sent");
+      await addDoc(collection(db, "bookings"), { ...booking, status: "pending", createdAt: serverTimestamp() });
     } catch (err) {
       console.error(err);
       setStatus("error");
+      return;
     }
+    try {
+      await sendBookingReceived(booking);
+    } catch (err) {
+      console.error("Email failed", err);
+    }
+    setForm(emptyForm);
+    setStatus("sent");
   }
 
   const inputClass = "w-full bg-ink border border-gold/20 px-4 py-3 text-ivory placeholder:text-ivory/30 focus:outline-none focus:border-gold";
@@ -46,12 +52,12 @@ export default function Booking() {
       <div className="max-w-2xl mx-auto">
         <p className="text-gold tracking-[0.2em] uppercase text-xs mb-4 text-center">Booking</p>
         <h2 className="font-display text-4xl md:text-5xl mb-4 text-center">Book an appointment</h2>
-        <p className="text-ivory/60 text-center mb-12">Choose your piercing and a time that suits you. We will confirm your appointment by phone or WhatsApp.</p>
+        <p className="text-ivory/60 text-center mb-12">Choose your piercing and a time that suits you. We will confirm your appointment by email.</p>
 
         {status === "sent" ? (
           <div className="border border-gold/30 p-8 text-center">
             <p className="font-display text-2xl text-gold mb-2">Request received</p>
-            <p className="text-ivory/70 mb-6">Thank you! We will contact you shortly to confirm your appointment. It is not confirmed until you hear from us.</p>
+            <p className="text-ivory/70 mb-6">Thank you! We have emailed you a copy of your request. Your appointment is not confirmed until you receive our confirmation email.</p>
             <button onClick={() => setStatus("idle")} className="border border-gold text-gold px-6 py-2 text-sm tracking-wide hover:bg-gold hover:text-ink transition-colors">Make another booking</button>
           </div>
         ) : (
@@ -60,7 +66,7 @@ export default function Booking() {
               <input required value={form.name} onChange={(e) => update("name", e.target.value)} maxLength={60} placeholder="Your name" className={inputClass} />
               <input required type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} maxLength={20} placeholder="Phone number" className={inputClass} />
             </div>
-            <input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} maxLength={100} placeholder="Email (optional)" className={inputClass} />
+            <input required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} maxLength={100} placeholder="Email (your confirmation is sent here)" className={inputClass} />
 
             <select required value={form.piercing} onChange={(e) => update("piercing", e.target.value)} className={inputClass}>
               <option value="">Choose your piercing</option>
