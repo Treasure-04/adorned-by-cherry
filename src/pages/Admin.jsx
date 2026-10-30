@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, ADMIN_EMAIL } from "../firebase";
+import AdminBookings from "./AdminBookings";
 
 export default function Admin() {
   const [user, setUser] = useState(null);
@@ -61,12 +62,15 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-ink">
-      <header className="border-b border-gold/20 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-gold/20 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl">Adorned by Cherry <span className="text-gold">Admin</span></h1>
-        <button onClick={() => signOut(auth)} className="border border-gold text-gold px-5 py-2 text-sm hover:bg-gold hover:text-ink transition-colors">Sign out</button>
+        <div className="flex items-center gap-4">
+          <a href="/" className="text-ivory/60 hover:text-gold text-sm transition-colors">View website</a>
+          <button onClick={() => signOut(auth)} className="border border-gold text-gold px-5 py-2 text-sm hover:bg-gold hover:text-ink transition-colors">Sign out</button>
+        </div>
       </header>
       <main className="max-w-5xl mx-auto px-6 py-10">
-        <p className="text-ivory/70">Welcome! Bookings and reviews will show up here next.</p>
+        <AdminBookings />
       </main>
     </div>
   );
