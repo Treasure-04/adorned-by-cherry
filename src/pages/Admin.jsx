@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { auth, ADMIN_EMAIL } from "../firebase";
 import AdminBookings from "./AdminBookings";
+import AdminReviews from "./AdminReviews";
+
+const tabs = ["Bookings", "Reviews"];
 
 export default function Admin() {
   const [user, setUser] = useState(null);
@@ -10,6 +13,7 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState("Bookings");
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -69,8 +73,17 @@ export default function Admin() {
           <button onClick={() => signOut(auth)} className="border border-gold text-gold px-5 py-2 text-sm hover:bg-gold hover:text-ink transition-colors">Sign out</button>
         </div>
       </header>
+
+      <div className="border-b border-gold/10 px-6">
+        <div className="max-w-5xl mx-auto flex gap-8">
+          {tabs.map((t) => (
+            <button key={t} onClick={() => setTab(t)} className={"py-4 text-sm tracking-wide border-b-2 transition-colors " + (tab === t ? "border-gold text-gold" : "border-transparent text-ivory/60 hover:text-ivory")}>{t}</button>
+          ))}
+        </div>
+      </div>
+
       <main className="max-w-5xl mx-auto px-6 py-10">
-        <AdminBookings />
+        {tab === "Bookings" ? <AdminBookings /> : <AdminReviews />}
       </main>
     </div>
   );
