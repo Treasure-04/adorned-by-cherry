@@ -9,6 +9,7 @@ import Booking from "./components/Booking";
 import FAQ from "./components/FAQ";
 import Contact from "./components/Contact";
 import Admin from "./pages/Admin";
+import Shop from "./pages/Shop";
 
 function Home() {
   return (
@@ -31,6 +32,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/shop" element={<Shop />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>

@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Hero() {
   return (
     <section id="home" className="min-h-screen flex items-center bg-ink pt-24 pb-16 px-6 relative overflow-hidden">
@@ -13,6 +15,7 @@ export default function Hero() {
           <div className="hero-item flex flex-wrap gap-4" style={{ animationDelay: "1.9s" }}>
             <a href="#booking" className="bg-gold text-ink px-8 py-3 text-sm tracking-wide font-medium hover:bg-gold-soft transition-colors">Book a Piercing</a>
             <a href="#services" className="border border-gold/50 text-ivory px-8 py-3 text-sm tracking-wide hover:border-gold transition-colors">View Price List</a>
+            <Link to="/shop" className="border border-gold text-gold px-8 py-3 text-sm tracking-wide hover:bg-gold hover:text-ink transition-colors">Shop Jewelry</Link>
           </div>
         </div>
       </div>
