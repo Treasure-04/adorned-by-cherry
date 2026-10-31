@@ -3,8 +3,9 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebas
 import { auth, ADMIN_EMAIL } from "../firebase";
 import AdminBookings from "./AdminBookings";
 import AdminReviews from "./AdminReviews";
+import AdminProducts from "./AdminProducts";
 
-const tabs = ["Bookings", "Reviews"];
+const tabs = ["Bookings", "Reviews", "Products"];
 
 export default function Admin() {
   const [user, setUser] = useState(null);
@@ -83,7 +84,9 @@ export default function Admin() {
       </div>
 
       <main className="max-w-5xl mx-auto px-6 py-10">
-        {tab === "Bookings" ? <AdminBookings /> : <AdminReviews />}
+        {tab === "Bookings" && <AdminBookings />}
+        {tab === "Reviews" && <AdminReviews />}
+        {tab === "Products" && <AdminProducts />}
       </main>
     </div>
   );
