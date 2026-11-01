@@ -27,4 +27,8 @@ export const faqs = [
     question: "What if I need to change my appointment?",
     answer: "Please contact us on WhatsApp or by phone as early as you can and we will find another time that works.",
   },
+  {
+    question: "Do you train?",
+    answer: "Yes, we offer piercing trainings for intrested ones. Please contact us on whatsapp for enquires.",
+  }
 ];
