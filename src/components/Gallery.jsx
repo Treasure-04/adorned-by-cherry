@@ -32,7 +32,8 @@ export default function Gallery() {
                 <img src={item.image} alt={item.category + " piercing"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <span className="text-ivory/30 text-sm">Photo coming soon</span>
-              )</div>
+              )}
+            </div>
           ))}
         </div>
       </div>
