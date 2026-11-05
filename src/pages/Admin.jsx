@@ -4,8 +4,9 @@ import { auth, ADMIN_EMAIL } from "../firebase";
 import AdminBookings from "./AdminBookings";
 import AdminReviews from "./AdminReviews";
 import AdminProducts from "./AdminProducts";
+import AdminOrders from "./AdminOrders";
 
-const tabs = ["Bookings", "Reviews", "Products"];
+const tabs = ["Bookings", "Reviews", "Products", "Orders"];
 
 export default function Admin() {
   const [user, setUser] = useState(null);
@@ -76,7 +77,7 @@ export default function Admin() {
       </header>
 
       <div className="border-b border-gold/10 px-6">
-        <div className="max-w-5xl mx-auto flex gap-8">
+        <div className="max-w-5xl mx-auto flex gap-6 overflow-x-auto">
           {tabs.map((t) => (
             <button key={t} onClick={() => setTab(t)} className={"py-4 text-sm tracking-wide border-b-2 transition-colors " + (tab === t ? "border-gold text-gold" : "border-transparent text-ivory/60 hover:text-ivory")}>{t}</button>
           ))}
@@ -87,6 +88,7 @@ export default function Admin() {
         {tab === "Bookings" && <AdminBookings />}
         {tab === "Reviews" && <AdminReviews />}
         {tab === "Products" && <AdminProducts />}
+        {tab === "Orders" && <AdminOrders />}
       </main>
     </div>
   );
