@@ -91,6 +91,11 @@ export default function Shop() {
     setMessage("");
   }
 
+  function shopNow() {
+    closeCart();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function updateDetail(field, value) {
     setDetails((d) => ({ ...d, [field]: value }));
   }
@@ -228,43 +233,49 @@ export default function Shop() {
               <button onClick={closeCart} className="text-gold text-2xl" aria-label="Close">✕</button>
             </div>
 
-            {step === "cart" && (
+            {step === "cart" && cartItems.length === 0 && (
+              <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="w-32 h-32 text-gold/60 mb-6" aria-hidden="true">
+                  <path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.2" />
+                  <circle cx="9.5" cy="20" r="1.3" />
+                  <circle cx="17" cy="20" r="1.3" />
+                </svg>
+                <p className="font-display text-3xl mb-6">Your cart is empty</p>
+                <button onClick={shopNow} className="bg-gold text-ink px-10 py-3 text-sm tracking-wide font-medium hover:bg-gold-soft transition-colors">Shop now</button>
+              </div>
+            )}
+
+            {step === "cart" && cartItems.length > 0 && (
               <>
                 <div className="flex-1 overflow-y-auto px-6 py-4">
-                  {cartItems.length === 0 ? (
-                    <p className="text-ivory/50">Your cart is empty.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {cartItems.map((i) => (
-                        <div key={i.id} className="flex gap-4 border-b border-gold/10 pb-4">
-                          <div className="w-16 h-16 shrink-0 bg-ink-light border border-gold/10 overflow-hidden">
-                            {i.image && <img src={optimized(i.image)} alt={i.name} className="w-full h-full object-cover" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-display text-lg truncate">{i.name}</p>
-                            <p className="text-gold text-sm mb-2">{formatNaira(i.price * i.qty)}</p>
-                            <div className="flex items-center gap-3">
-                              <button onClick={() => changeQty(i.id, -1)} className={qtyButton} aria-label="Remove one">−</button>
-                              <span>{i.qty}</span>
-                              <button onClick={() => changeQty(i.id, 1)} className={qtyButton} aria-label="Add one">+</button>
-                            </div>
+                  <div className="space-y-4">
+                    {cartItems.map((i) => (
+                      <div key={i.id} className="flex gap-4 border-b border-gold/10 pb-4">
+                        <div className="w-16 h-16 shrink-0 bg-ink-light border border-gold/10 overflow-hidden">
+                          {i.image && <img src={optimized(i.image)} alt={i.name} className="w-full h-full object-cover" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-display text-lg truncate">{i.name}</p>
+                          <p className="text-gold text-sm mb-2">{formatNaira(i.price * i.qty)}</p>
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => changeQty(i.id, -1)} className={qtyButton} aria-label="Remove one">−</button>
+                            <span>{i.qty}</span>
+                            <button onClick={() => changeQty(i.id, 1)} className={qtyButton} aria-label="Add one">+</button>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                {cartItems.length > 0 && (
-                  <div className="px-6 py-4 border-t border-gold/20 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-ivory/70">Total</span>
-                      <span className="text-gold text-xl">{formatNaira(cartTotal)}</span>
-                    </div>
-                    <button onClick={() => setStep("details")} className="w-full bg-gold text-ink px-6 py-3 text-sm tracking-wide font-medium hover:bg-gold-soft transition-colors">Checkout</button>
-                    <button onClick={() => setCart({})} className="w-full text-ivory/50 hover:text-blush-rose text-sm transition-colors">Clear cart</button>
+                <div className="px-6 py-4 border-t border-gold/20 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-ivory/70">Total</span>
+                    <span className="text-gold text-xl">{formatNaira(cartTotal)}</span>
                   </div>
-                )}
+                  <button onClick={() => setStep("details")} className="w-full bg-gold text-ink px-6 py-3 text-sm tracking-wide font-medium hover:bg-gold-soft transition-colors">Checkout</button>
+                  <button onClick={() => setCart({})} className="w-full text-ivory/50 hover:text-blush-rose text-sm transition-colors">Clear cart</button>
+                </div>
               </>
             )}
 

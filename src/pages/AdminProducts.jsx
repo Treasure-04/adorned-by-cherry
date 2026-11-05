@@ -6,7 +6,7 @@ import { formatNaira } from "../data/services";
 const CLOUD_NAME = "auvnxgsh";
 const UPLOAD_PRESET = "adorned_products";
 
-const categories = ["Earrings", "Nose jewelry", "Body jewelry", "Necklaces", "Bracelets", "Rings"];
+const categories = ["Earrings", "Nose jewelry", "Body jewelry", "Necklaces", "Bracelets", "Rings", "Watches"];
 
 const emptyForm = { name: "", price: "", category: categories[0], description: "", image: "", inStock: true };
 
@@ -151,7 +151,7 @@ export default function AdminProducts() {
           <input required value={form.name} onChange={(e) => update("name", e.target.value)} maxLength={80} placeholder="Product name" className={inputClass} />
 
           <div className="grid sm:grid-cols-2 gap-4">
-            <input required type="number" min="0" step="1" value={form.price} onChange={(e) => update("price", e.target.value)} placeholder="Price in ₦" className={inputClass} />
+            <input required inputMode="numeric" value={form.price ? Number(form.price).toLocaleString("en-NG") : ""} onChange={(e) => update("price", e.target.value.replace(/\D/g, ""))} placeholder="Price in ₦, e.g. 10,000" className={inputClass} />
             <select value={form.category} onChange={(e) => update("category", e.target.value)} className={inputClass}>
               {categories.map((c) => (
                 <option key={c} value={c}>{c}</option>
