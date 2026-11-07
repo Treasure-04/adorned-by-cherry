@@ -5,9 +5,10 @@ import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "../firebase";
 import { formatNaira } from "../data/services";
 import { contact } from "../data/contact";
+import { PAYSTACK_PUBLIC_KEY } from "../config";
 
-const PAYSTACK_PUBLIC_KEY = "pk_test_03d535fbacdc9e23cc9e311b467b7a06a994071b";
 const CART_KEY = "adorned-cart";
+const DETAILS_KEY = "adorned-checkout";
 const emptyDetails = { name: "", phone: "", email: "", address: "", method: "" };
 
 function optimized(url) {
@@ -22,6 +23,14 @@ function loadCart() {
   }
 }
 
+function loadDetails() {
+  try {
+    return { ...emptyDetails, ...JSON.parse(localStorage.getItem(DETAILS_KEY)) };
+  } catch (err) {
+    return emptyDetails;
+  }
+}
+
 export default function Shop() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +39,7 @@ export default function Shop() {
   const [cart, setCart] = useState(loadCart);
   const [cartOpen, setCartOpen] = useState(false);
   const [step, setStep] = useState("cart");
-  const [details, setDetails] = useState(emptyDetails);
+  const [details, setDetails] = useState(loadDetails);
   const [paying, setPaying] = useState(false);
   const [message, setMessage] = useState("");
   const [orderRef, setOrderRef] = useState("");
@@ -57,6 +66,14 @@ export default function Shop() {
       console.error(err);
     }
   }, [cart]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DETAILS_KEY, JSON.stringify(details));
+    } catch (err) {
+      console.error(err);
+    }
+  }, [details]);
 
   const categories = ["All", ...new Set(products.map((p) => p.category))];
   const shown = active === "All" ? products : products.filter((p) => p.category === active);
@@ -101,6 +118,10 @@ export default function Shop() {
     setDetails((d) => ({ ...d, [field]: value }));
   }
 
+  function clearSaved() {
+    setDetails(emptyDetails);
+  }
+
   async function confirmOrder(reference) {
     setOrderMethod(details.method);
     try {
@@ -122,7 +143,6 @@ export default function Shop() {
     }
     setOrderRef(reference);
     setCart({});
-    setDetails(emptyDetails);
     setPaying(false);
   }
 
@@ -130,7 +150,7 @@ export default function Shop() {
     e.preventDefault();
     if (cartItems.length === 0) return;
     if (!details.method) {
-      setMessage("Please choose delivery or pickup.");
+      setMessage("Please choose pickup or delivery.");
       return;
     }
     setMessage("");
@@ -164,9 +184,9 @@ export default function Shop() {
 
   const qtyButton = "w-9 h-9 border border-gold/40 text-gold hover:bg-gold hover:text-ink transition-colors";
   const inputClass = "w-full bg-ink-light border border-gold/20 px-4 py-3 text-ivory placeholder:text-ivory/30 focus:outline-none focus:border-gold";
-  const methodButton = (on) => "px-4 py-3 text-sm tracking-wide border transition-colors " + (on ? "bg-gold text-ink border-gold" : "border-gold/30 text-ivory/80 hover:border-gold");
   const titles = { cart: "Your cart", details: "Checkout", success: "Thank you", problem: "One more step" };
   const problemLink = "https://wa.me/" + contact.whatsapp + "?text=" + encodeURIComponent("Hello Adorned by Cherry, I paid for an order but it did not finish saving. My payment reference is: " + orderRef);
+  const hasSaved = details.name || details.phone || details.email || details.address;
 
   return (
     <div className="min-h-screen bg-ink">
@@ -289,28 +309,37 @@ export default function Shop() {
             {step === "details" && (
               <form onSubmit={pay} className="flex flex-col flex-1 min-h-0">
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-                  <button type="button" onClick={() => setStep("cart")} className="text-ivory/60 hover:text-gold text-sm transition-colors">← Back to cart</button>
+                  <div className="flex items-center justify-between">
+                    <button type="button" onClick={() => setStep("cart")} className="text-ivory/60 hover:text-gold text-sm transition-colors">← Back to cart</button>
+                    {hasSaved && <button type="button" onClick={clearSaved} className="text-ivory/40 hover:text-blush-rose text-xs transition-colors">Clear saved details</button>}
+                  </div>
+
                   <input required value={details.name} onChange={(e) => updateDetail("name", e.target.value)} maxLength={80} placeholder="Your name" className={inputClass} />
                   <input required type="tel" value={details.phone} onChange={(e) => updateDetail("phone", e.target.value)} maxLength={20} placeholder="Phone number" className={inputClass} />
                   <input required type="email" value={details.email} onChange={(e) => updateDetail("email", e.target.value)} maxLength={100} placeholder="Email (Paystack sends your receipt here)" className={inputClass} />
 
                   <div>
-                    <p className="text-ivory/60 text-sm mb-2">How would you like to get your order?</p>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button type="button" onClick={() => updateDetail("method", "delivery")} className={methodButton(details.method === "delivery")}>Delivery</button>
-                      <button type="button" onClick={() => updateDetail("method", "pickup")} className={methodButton(details.method === "pickup")}>Pickup</button>
-                    </div>
+                    <label className="block text-ivory/60 text-sm mb-2">Shipping</label>
+                    <select required value={details.method} onChange={(e) => updateDetail("method", e.target.value)} className={inputClass}>
+                      <option value="">Choose pickup or delivery</option>
+                      <option value="pickup">Pickup</option>
+                      <option value="delivery">Delivery</option>
+                    </select>
                   </div>
+
+                  {details.method === "pickup" && (
+                    <div className="border border-gold/20 p-3 text-sm">
+                      <p className="text-gold text-xs tracking-[0.15em] uppercase mb-1">Pickup address</p>
+                      <p className="text-ivory/80">{contact.address}</p>
+                      <p className="text-ivory/50 mt-2">We will contact you when your order is ready.</p>
+                    </div>
+                  )}
 
                   {details.method === "delivery" && (
                     <>
                       <textarea required value={details.address} onChange={(e) => updateDetail("address", e.target.value)} maxLength={300} rows={3} placeholder="Delivery address" className={inputClass} />
                       <p className="text-ivory/60 text-sm border border-gold/20 p-3">Delivery depends on your location. The delivery price is not part of the total. It will be discussed between you and the rider.</p>
                     </>
-                  )}
-
-                  {details.method === "pickup" && (
-                    <p className="text-ivory/60 text-sm border border-gold/20 p-3">{"Pickup from " + contact.address + ". We will contact you when your order is ready."}</p>
                   )}
 
                   {message && <p className="text-blush-rose text-sm">{message}</p>}
