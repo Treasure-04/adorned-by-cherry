@@ -30,5 +30,9 @@ export const faqs = [
   {
     question: "Do you train?",
     answer: "Yes, we offer piercing trainings for intrested ones. Please contact us on whatsapp for enquires.",
-  }
+  },
+  {
+    question: "How much is delivery?",
+    answer: "You can choose pickup or delivery at checkout. Delivery is by rider and depends on your location. You do not pay for delivery on the website, because the price is discussed between you and the rider.",
+  },
 ];

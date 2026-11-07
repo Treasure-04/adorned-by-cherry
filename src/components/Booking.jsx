@@ -1,20 +1,44 @@
-import { useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { addDoc, collection, getDocs, query, serverTimestamp, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { serviceCategories, formatNaira } from "../data/services";
-import { sendBookingReceived } from "../emailjs";
+import { sendBookingReceived, sendNewBookingAlert } from "../emailjs";
 
-const times = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00pm"];
+const times = ["10:00 AM", "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM", "6:00 PM"];
 
 const emptyForm = { name: "", phone: "", email: "", piercing: "", date: "", time: "", notes: "" };
 
 export default function Booking() {
   const [form, setForm] = useState(emptyForm);
   const [status, setStatus] = useState("idle");
+  const [taken, setTaken] = useState([]);
   const today = new Date().toISOString().split("T")[0];
 
+  useEffect(() => {
+    if (!form.date) {
+      setTaken([]);
+      return;
+    }
+    let cancelled = false;
+    async function loadTaken() {
+      try {
+        const snap = await getDocs(query(collection(db, "slots"), where("date", "==", form.date)));
+        if (cancelled) return;
+        const list = snap.docs.map((d) => d.data().time);
+        setTaken(list);
+        setForm((f) => (list.includes(f.time) ? { ...f, time: "" } : f));
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadTaken();
+    return () => {
+      cancelled = true;
+    };
+  }, [form.date]);
+
   function update(field, value) {
-    setForm({ ...form, [field]: value });
+    setForm((f) => ({ ...f, [field]: value }));
   }
 
   async function submit(e) {
@@ -36,15 +60,13 @@ export default function Booking() {
       setStatus("error");
       return;
     }
-    try {
-      await sendBookingReceived(booking);
-    } catch (err) {
-      console.error("Email failed", err);
-    }
+    await Promise.allSettled([sendBookingReceived(booking), sendNewBookingAlert(booking)]);
     setForm(emptyForm);
+    setTaken([]);
     setStatus("sent");
   }
 
+  const allTaken = form.date && times.every((t) => taken.includes(t));
   const inputClass = "w-full bg-ink border border-gold/20 px-4 py-3 text-ivory placeholder:text-ivory/30 focus:outline-none focus:border-gold";
 
   return (
@@ -84,10 +106,11 @@ export default function Booking() {
               <select required value={form.time} onChange={(e) => update("time", e.target.value)} className={inputClass}>
                 <option value="">Choose a time</option>
                 {times.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t} disabled={taken.includes(t)}>{taken.includes(t) ? t + " (booked)" : t}</option>
                 ))}
               </select>
             </div>
+            {allTaken && <p className="text-blush-rose text-sm">All times on this day are booked. Please choose another date.</p>}
 
             <textarea value={form.notes} onChange={(e) => update("notes", e.target.value)} maxLength={500} rows={3} placeholder="Anything we should know? (optional)" className={inputClass} />
 

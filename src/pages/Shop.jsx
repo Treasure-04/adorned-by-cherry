@@ -8,7 +8,7 @@ import { contact } from "../data/contact";
 
 const PAYSTACK_PUBLIC_KEY = "pk_test_03d535fbacdc9e23cc9e311b467b7a06a994071b";
 const CART_KEY = "adorned-cart";
-const emptyDetails = { name: "", phone: "", email: "", address: "" };
+const emptyDetails = { name: "", phone: "", email: "", address: "", method: "" };
 
 function optimized(url) {
   return url.includes("/upload/") ? url.replace("/upload/", "/upload/w_600,q_auto,f_auto/") : url;
@@ -34,6 +34,7 @@ export default function Shop() {
   const [paying, setPaying] = useState(false);
   const [message, setMessage] = useState("");
   const [orderRef, setOrderRef] = useState("");
+  const [orderMethod, setOrderMethod] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -101,6 +102,7 @@ export default function Shop() {
   }
 
   async function confirmOrder(reference) {
+    setOrderMethod(details.method);
     try {
       const res = await fetch("/api/verify-order", {
         method: "POST",
@@ -108,7 +110,7 @@ export default function Shop() {
         body: JSON.stringify({
           reference,
           items: cartItems.map((i) => ({ id: i.id, qty: i.qty })),
-          customer: details,
+          customer: { ...details, address: details.method === "pickup" ? "" : details.address },
         }),
       });
       const data = await res.json();
@@ -127,6 +129,10 @@ export default function Shop() {
   function pay(e) {
     e.preventDefault();
     if (cartItems.length === 0) return;
+    if (!details.method) {
+      setMessage("Please choose delivery or pickup.");
+      return;
+    }
     setMessage("");
     setPaying(true);
     const reference = "adorned-" + Date.now() + "-" + Math.floor(Math.random() * 1000000);
@@ -158,6 +164,7 @@ export default function Shop() {
 
   const qtyButton = "w-9 h-9 border border-gold/40 text-gold hover:bg-gold hover:text-ink transition-colors";
   const inputClass = "w-full bg-ink-light border border-gold/20 px-4 py-3 text-ivory placeholder:text-ivory/30 focus:outline-none focus:border-gold";
+  const methodButton = (on) => "px-4 py-3 text-sm tracking-wide border transition-colors " + (on ? "bg-gold text-ink border-gold" : "border-gold/30 text-ivory/80 hover:border-gold");
   const titles = { cart: "Your cart", details: "Checkout", success: "Thank you", problem: "One more step" };
   const problemLink = "https://wa.me/" + contact.whatsapp + "?text=" + encodeURIComponent("Hello Adorned by Cherry, I paid for an order but it did not finish saving. My payment reference is: " + orderRef);
 
@@ -286,7 +293,26 @@ export default function Shop() {
                   <input required value={details.name} onChange={(e) => updateDetail("name", e.target.value)} maxLength={80} placeholder="Your name" className={inputClass} />
                   <input required type="tel" value={details.phone} onChange={(e) => updateDetail("phone", e.target.value)} maxLength={20} placeholder="Phone number" className={inputClass} />
                   <input required type="email" value={details.email} onChange={(e) => updateDetail("email", e.target.value)} maxLength={100} placeholder="Email (Paystack sends your receipt here)" className={inputClass} />
-                  <textarea required value={details.address} onChange={(e) => updateDetail("address", e.target.value)} maxLength={300} rows={3} placeholder="Delivery address (or write pickup)" className={inputClass} />
+
+                  <div>
+                    <p className="text-ivory/60 text-sm mb-2">How would you like to get your order?</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button type="button" onClick={() => updateDetail("method", "delivery")} className={methodButton(details.method === "delivery")}>Delivery</button>
+                      <button type="button" onClick={() => updateDetail("method", "pickup")} className={methodButton(details.method === "pickup")}>Pickup</button>
+                    </div>
+                  </div>
+
+                  {details.method === "delivery" && (
+                    <>
+                      <textarea required value={details.address} onChange={(e) => updateDetail("address", e.target.value)} maxLength={300} rows={3} placeholder="Delivery address" className={inputClass} />
+                      <p className="text-ivory/60 text-sm border border-gold/20 p-3">Delivery depends on your location. The delivery price is not part of the total. It will be discussed between you and the rider.</p>
+                    </>
+                  )}
+
+                  {details.method === "pickup" && (
+                    <p className="text-ivory/60 text-sm border border-gold/20 p-3">{"Pickup from " + contact.address + ". We will contact you when your order is ready."}</p>
+                  )}
+
                   {message && <p className="text-blush-rose text-sm">{message}</p>}
                 </div>
                 <div className="px-6 py-4 border-t border-gold/20 space-y-3">
@@ -303,7 +329,7 @@ export default function Shop() {
               <div className="flex-1 px-6 py-10 text-center">
                 <p className="text-gold text-4xl mb-4">✓</p>
                 <p className="font-display text-2xl mb-3">Payment received</p>
-                <p className="text-ivory/70 mb-4">Thank you for your order! We will contact you shortly about delivery.</p>
+                <p className="text-ivory/70 mb-4">{orderMethod === "pickup" ? "Thank you for your order! We will contact you when it is ready for pickup." : "Thank you for your order! We will contact you to arrange delivery. The delivery price will be discussed between you and the rider."}</p>
                 <p className="text-ivory/40 text-xs mb-8 break-all">{"Reference: " + orderRef}</p>
                 <button onClick={closeCart} className="border border-gold text-gold px-8 py-3 text-sm tracking-wide hover:bg-gold hover:text-ink transition-colors">Continue shopping</button>
               </div>

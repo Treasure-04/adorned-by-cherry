@@ -121,7 +121,7 @@ export default function AdminOrders() {
                 <div className="grid sm:grid-cols-2 gap-2 text-sm text-ivory/70 mb-4">
                   <p>Phone: <a href={"tel:" + customer.phone} className="text-gold">{customer.phone}</a></p>
                   <p className="break-words">Email: {customer.email}</p>
-                  <p className="sm:col-span-2 whitespace-pre-line">Address: {customer.address}</p>
+                  <p className="sm:col-span-2 whitespace-pre-line">{customer.method === "pickup" ? "Pickup (collecting from the studio)" : "Delivery to: " + (customer.address || "")}</p>
                 </div>
 
                 <p className="text-ivory/30 text-xs mb-4 break-all">{"Reference: " + o.reference}</p>

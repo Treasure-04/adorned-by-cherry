@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, doc, onSnapshot, orderBy, query, updateDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, setDoc, updateDoc, where } from "firebase/firestore";
 import { db } from "../firebase";
 import { sendBookingConfirmed } from "../emailjs";
 
@@ -54,6 +54,21 @@ export default function AdminBookings() {
   async function confirmBooking(b) {
     setBusyId(b.id);
     setMessage("");
+
+    try {
+      const clash = await getDocs(query(collection(db, "slots"), where("date", "==", b.date), where("time", "==", b.time)));
+      if (clash.docs.some((d) => d.id !== b.id)) {
+        setMessage("That time is already taken by another confirmed appointment. Decline this one, or message the customer to pick another time.");
+        setBusyId(null);
+        return;
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage("Could not check the time slot.");
+      setBusyId(null);
+      return;
+    }
+
     let sent = true;
     try {
       await sendBookingConfirmed(b);
@@ -61,7 +76,9 @@ export default function AdminBookings() {
       console.error(err);
       sent = false;
     }
+
     try {
+      await setDoc(doc(db, "slots", b.id), { date: b.date, time: b.time });
       await updateDoc(doc(db, "bookings", b.id), { status: "confirmed", confirmationEmailSent: sent });
       if (!sent) setMessage("Booking confirmed, but the email did not send. Message the customer on WhatsApp.");
     } catch (err) {
@@ -77,9 +94,25 @@ export default function AdminBookings() {
     setMessage("");
     try {
       await updateDoc(doc(db, "bookings", b.id), { status: "declined" });
+      await deleteDoc(doc(db, "slots", b.id));
     } catch (err) {
       console.error(err);
       setMessage("Could not update the booking.");
+    }
+    setBusyId(null);
+  }
+
+  async function cancelAppointment(b) {
+    if (!window.confirm("Cancel this confirmed appointment? The time will open up again.")) return;
+    setBusyId(b.id);
+    setMessage("");
+    try {
+      await updateDoc(doc(db, "bookings", b.id), { status: "declined" });
+      await deleteDoc(doc(db, "slots", b.id));
+      setMessage("Appointment cancelled. Message the customer on WhatsApp to let them know.");
+    } catch (err) {
+      console.error(err);
+      setMessage("Could not cancel the appointment.");
     }
     setBusyId(null);
   }
@@ -164,7 +197,10 @@ export default function AdminBookings() {
                   </>
                 )}
                 {b.status === "confirmed" && (
-                  <button disabled={busyId === b.id} onClick={() => resendEmail(b)} className={buttonClass}>{busyId === b.id ? "Sending..." : "Send email again"}</button>
+                  <>
+                    <button disabled={busyId === b.id} onClick={() => resendEmail(b)} className={buttonClass}>{busyId === b.id ? "Sending..." : "Send email again"}</button>
+                    <button disabled={busyId === b.id} onClick={() => cancelAppointment(b)} className="border border-blush-rose text-blush-rose px-5 py-2 text-sm tracking-wide hover:bg-blush-rose hover:text-ink transition-colors disabled:opacity-50">Cancel appointment</button>
+                  </>
                 )}
               </div>
             </div>

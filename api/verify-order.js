@@ -54,6 +54,8 @@ export default async function handler(req, res) {
       return res.status(402).json({ error: "Amount does not match" });
     }
 
+    const method = customer.method === "pickup" ? "pickup" : "delivery";
+
     await db.collection("orders").add({
       reference,
       items: lines,
@@ -62,7 +64,8 @@ export default async function handler(req, res) {
         name: clean(customer.name, 80),
         phone: clean(customer.phone, 20),
         email: clean(customer.email, 100),
-        address: clean(customer.address, 300),
+        method,
+        address: method === "pickup" ? "" : clean(customer.address, 300),
       },
       status: "paid",
       createdAt: FieldValue.serverTimestamp(),

@@ -8,6 +8,7 @@ import Reviews from "./components/Reviews";
 import Booking from "./components/Booking";
 import FAQ from "./components/FAQ";
 import Contact from "./components/Contact";
+import WhatsAppButton from "./components/WhatsAppButton";
 import Admin from "./pages/Admin";
 import Shop from "./pages/Shop";
 
@@ -35,6 +36,7 @@ function App() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
+      <WhatsAppButton />
     </BrowserRouter>
   );
 }
