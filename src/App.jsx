@@ -8,7 +8,7 @@ import Reviews from "./components/Reviews";
 import Booking from "./components/Booking";
 import FAQ from "./components/FAQ";
 import Contact from "./components/Contact";
-import WhatsAppButton from "./components/WhatsAppButton";
+import WhatsAppButton from "./components/WhatsappButton";
 import Admin from "./pages/Admin";
 import Shop from "./pages/Shop";
 
